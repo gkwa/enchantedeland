@@ -8,20 +8,29 @@ import (
 	"cuelang.org/go/encoding/yaml"
 )
 
-// YAMLMarshalWithCUE converts a Go data structure to YAML string using CUE
-func YAMLMarshalWithCUE(data any) (string, error) {
-	// Create a new CUE context
+// ValidateWithCUE validates a Go data structure using CUE
+func ValidateWithCUE(data any) error {
 	ctx := cuecontext.New()
-
-	// Encode the Go data structure into a CUE Value
 	value := ctx.Encode(data)
 
-	// Check for encoding errors
+	if err := value.Err(); err != nil {
+		return fmt.Errorf("validation failed: %w", err)
+	}
+
+	// Additional validation can be added here
+	// e.g., value.Validate() for more strict checking
+	return nil
+}
+
+// ConvertToYAML converts a CUE value to YAML string
+func ConvertToYAML(data any) (string, error) {
+	ctx := cuecontext.New()
+	value := ctx.Encode(data)
+
 	if err := value.Err(); err != nil {
 		return "", fmt.Errorf("failed to encode data to CUE: %w", err)
 	}
 
-	// Convert the CUE Value to YAML bytes
 	yamlBytes, err := yaml.Encode(value)
 	if err != nil {
 		return "", fmt.Errorf("failed to encode CUE value to YAML: %w", err)
@@ -30,9 +39,17 @@ func YAMLMarshalWithCUE(data any) (string, error) {
 	return string(yamlBytes), nil
 }
 
+// YAMLMarshalWithCUE combines validation and conversion
+func YAMLMarshalWithCUE(data any) (string, error) {
+	if err := ValidateWithCUE(data); err != nil {
+		return "", err
+	}
+
+	return ConvertToYAML(data)
+}
+
 // Example usage
 func main() {
-	// Example Go data structure
 	data := map[string]any{
 		"name":    "John Doe",
 		"age":     30,
@@ -45,10 +62,21 @@ func main() {
 		},
 	}
 
-	yamlString, err := YAMLMarshalWithCUE(data)
-	if err != nil {
-		log.Fatalf("Error: %v", err)
+	// Option 1: Separate validation and conversion
+	if err := ValidateWithCUE(data); err != nil {
+		log.Fatalf("Validation error: %v", err)
 	}
+
+	yamlString, err := ConvertToYAML(data)
+	if err != nil {
+		log.Fatalf("Conversion error: %v", err)
+	}
+
+	// Option 2: Combined validation and conversion
+	// yamlString, err := YAMLMarshalWithCUE(data)
+	// if err != nil {
+	// 	log.Fatalf("Error: %v", err)
+	// }
 
 	fmt.Println("YAML output:")
 	fmt.Println(yamlString)
