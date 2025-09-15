@@ -9,7 +9,7 @@ import (
 )
 
 // YAMLMarshalWithCUE converts a Go data structure to YAML string using CUE
-func YAMLMarshalWithCUE(data interface{}) (string, error) {
+func YAMLMarshalWithCUE(data any) (string, error) {
 	// Create a new CUE context
 	ctx := cuecontext.New()
 	
@@ -33,7 +33,7 @@ func YAMLMarshalWithCUE(data interface{}) (string, error) {
 // Example usage
 func main() {
 	// Example Go data structure
-	data := map[string]interface{}{
+	data := map[string]any{
 		"name":    "John Doe",
 		"age":     30,
 		"active":  true,
